@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Animal Picture App</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 16px; }
+    img { max-width: 100%; margin-top: 16px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Animal Picture App</h1>
+
+  <label>Animal:
+    <select id="animal">
+      <option value="CAT">Cat</option>
+      <option value="DOG">Dog</option>
+      <option value="BEAR">Bear</option>
+    </select>
+  </label>
+
+  <label>How many:
+    <input id="count" type="number" min="1" max="10" value="1">
+  </label>
+
+  <p>
+    <button onclick="fetchAndSave()">Fetch &amp; save</button>
+    <button onclick="showLatest()">Show latest</button>
+  </p>
+
+  <p id="message"></p>
+  <img id="picture" alt="Latest animal picture" hidden>
+
+  <script>
+    const message = document.getElementById("message");
+    const picture = document.getElementById("picture");
+
+    async function fetchAndSave() {
+      const animal = document.getElementById("animal").value;
+      const count = document.getElementById("count").value;
+      message.textContent = "Fetching...";
+
+      const response = await fetch(`/api/pictures?animal=${animal}&count=${count}`, { method: "POST" });
+
+      if (!response.ok) {
+        message.textContent = "Something went wrong (status " + response.status + ")";
+        return;
+      }
+
+      const saved = await response.json();
+      message.textContent = `Saved ${saved.length} ${animal} picture(s).`;
+      showLatest();
+    }
+
+    async function showLatest() {
+      const animal = document.getElementById("animal").value;
+      const response = await fetch(`/api/pictures/${animal}/latest`);
+
+      if (!response.ok) {
+        message.textContent = `No ${animal} picture saved yet.`;
+        picture.hidden = true;
+        return;
+      }
+
+      const image = await response.blob();
+      picture.src = URL.createObjectURL(image);
+      picture.hidden = false;
+    }
+  </script>
+</body>
+</html>
